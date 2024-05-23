@@ -1,109 +1,76 @@
-"use client"
+"use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
-import 'swiper/css';
-import 'swiper/css/effect-cube';
-import 'swiper/css/pagination';
-import { Swiper, SwiperSlide } from 'swiper/react';
-import { Autoplay, EffectCube, Pagination } from 'swiper/modules';
-import './swiper.css';
+import "swiper/css";
+import "swiper/css/effect-cube";
+import "swiper/css/pagination";
+import "./swiper.css";
+import AddUser from "./components/AddUser";
+import TableUser from "./components/TableUser";
 import { useEffect, useState } from "react";
-import Loading from "@/components/loading";
+import axios from "axios";
+import { toast } from "@/components/ui/use-toast";
+import { ToastAction } from "@radix-ui/react-toast";
+
+export interface User {
+    id: number;
+    fingerId: string;
+    userName: string;
+    email: string;
+    phone: string;
+    gender: string;
+    creatAt: Date;
+}
 
 const User = () => {
-    const [online, setOnline] = useState(true);
+    const [listUser, setListUser] = useState([]);
+    const [isLoading, setIsLoading] = useState<Boolean>(true);
+    const [user, setUser] = useState<User | null>(null);
 
-  useEffect(() => {
-    const handleOnlineStatusChange = () => {
-      setOnline(window.navigator.onLine);
-    };
-
-    window.addEventListener('online', handleOnlineStatusChange);
-    window.addEventListener('offline', handleOnlineStatusChange);
-
-    return () => {
-      window.removeEventListener('online', handleOnlineStatusChange);
-      window.removeEventListener('offline', handleOnlineStatusChange);
-    };
-  }, []);
-    return ( 
-            !online ?  <Loading/>
-            :
-            <div className="w-full mt-8 flex items-center justify-center">
-                <Card className="bg-gray-100">
-                    <CardHeader className="flex flex-row p-3">
-                        <div className="mr-4 translate-y-6">
-                            <Swiper
-                                effect={'cube'}
-                                grabCursor={true}
-                                cubeEffect={{
-                                    shadow: false,
-                                }}
-                                loop = {true}
-                                autoplay = {{
-                                    delay: 3000,
-                                    disableOnInteraction: false,
-                                }}
-                                modules={[Autoplay, EffectCube, Pagination]}
-                                className="mySwiper"
-                            >
-                                <SwiperSlide>
-                                    <Image
-                                        src="/logo.png"
-                                        alt=""
-                                        width={100}
-                                        height={100}
-                                        loading="lazy"
-                                    />
-                                </SwiperSlide>
-                                <SwiperSlide>
-                                <Image
-                                    src="/macgai.jpg"
-                                    alt=""
-                                    width={100}
-                                    height={100}
-                                    loading="lazy"
-                                />
-                                </SwiperSlide>
-                            </Swiper>
-                            
-                        </div>
-                        <div>
-                            <CardTitle className="text-blue-600">Học Viện</CardTitle>
-                            <CardDescription>Công nghệ Bưu chính Viễn thông</CardDescription>
-                            <div className="bg-red-400 w-full h-[2px] mt-1 rounded"></div>
-                            <div className="text-center text-red-500 font-semibold mt-1">THẺ SINH VIÊN</div>
-                        </div>
-                    </CardHeader>
-                    <CardContent className="p-3 py-0 flex flex-row items-center gap-6 relative">
-                        <div>
-                            <p className="text-sm font-bold text-blue-800 mt-1 text-center">Mã SV</p>
-                            <p className="text-sm font-semibold text-red-500">B20DCCN511</p>
-                        </div>
-                        <div className="translate-y-[-20px]">
-                            <p>
-                                <span className="text-xs font-bold">Họ và tên: </span>
-                                <span className="text-xs text-blue-800 font-bold">Nguyễn Đoàn Đức Phúc</span>
-                            </p>
-                            <p>
-                                <span className="text-xs font-bold">Sinh ngày: </span>
-                                <span className="text-xs text-blue-800 font-bold">18/08/2002</span>
-                            </p>
-                            <p>
-                                <span className="text-xs font-bold">Hộ khẩu TT: </span>
-                                <span className="text-xs text-blue-800 font-bold">Thái Bình</span>
-                            </p>
-                            <p>
-                                <span className="text-xs font-bold">Ngành: </span>
-                                <span className="text-xs text-blue-800 font-bold">Công nghệ thông tin</span>
-                            </p>
-                        </div>
-                        <Image src="/logo.png" alt="" width={200} height={200} className="absolute opacity-40 top-[-50px] right-[20px]"/>
-                    </CardContent>
-                </Card>
+    useEffect(() => {
+        let config = {
+            method: "get",
+            maxBodyLength: Infinity,
+            url: "http://localhost:5000/api/userfinger/all",
+            headers: {},
+        };
+        setIsLoading(true);
+        axios
+            .request(config)
+            .then((response: any) => {
+                setIsLoading(false);
+                setListUser(response.data);
+            })
+            .catch((error: any) => {
+                setIsLoading(false);
+                console.log(error);
+                toast({
+                    variant: "destructive",
+                    title: "Something went wrong",
+                    description: "Error get list user",
+                    action: (
+                        <ToastAction altText="Try again">Try again</ToastAction>
+                    ),
+                });
+            });
+    }, []);
+    return (
+        <div className="w-full h-full">
+            <div className="flex flex-col px-10 gap-5">
+                <div className="text-center py-4 font-bold text-5xl">
+                    Manage User
+                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-3">
+                    <AddUser user={user as User} />
+                    <TableUser
+                        setUser={setUser}
+                        isLoading={isLoading}
+                        listUser={listUser}
+                    />
+                </div>
             </div>
+        </div>
     );
-}
- 
+};
+
 export default User;
